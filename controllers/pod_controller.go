@@ -64,6 +64,33 @@ func (r *PodReconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctrl.R
 		return ctrl.Result{}, err
 	}
 
+	/*
+	   Step 1: Add or remove the label.
+	*/
+
+	labelShouldBePresent := pod.Annotations[addPodNameLabelAnnotation] == "true"
+	labelIsPresent := pod.Labels[podNameLabel] == pod.Name
+
+	if labelShouldBePresent == labelIsPresent {
+		// The desired state and actual state of the Pod are the same.
+		// No further action is required by the operator at this moment.
+		log.Info("no update required")
+		return ctrl.Result{}, nil
+	}
+
+	if labelShouldBePresent {
+		// If the label should be set but is not, set it.
+		if pod.Labels == nil {
+			pod.Labels = make(map[string]string)
+		}
+		pod.Labels[podNameLabel] = pod.Name
+		log.Info("adding label")
+	} else {
+		// If the label should not be set but is, remove it.
+		delete(pod.Labels, podNameLabel)
+		log.Info("removing label")
+	}
+
 	return ctrl.Result{}, nil
 }
 
