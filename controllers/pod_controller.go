@@ -21,6 +21,7 @@ import (
 
 	"github.com/go-logr/logr"
 	corev1 "k8s.io/api/core/v1"
+	apierrors "k8s.io/apimachinery/pkg/api/errors"
 	"k8s.io/apimachinery/pkg/runtime"
 	ctrl "sigs.k8s.io/controller-runtime"
 	"sigs.k8s.io/controller-runtime/pkg/client"
@@ -40,19 +41,28 @@ const (
 	podNameLabel              = "padok.fr/pod-name"
 )
 
-// Reconcile is part of the main kubernetes reconciliation loop which aims to
-// move the current state of the cluster closer to the desired state.
-// TODO(user): Modify the Reconcile function to compare the state specified by
-// the Pod object against the actual cluster state, and then
-// perform operations to make the cluster state reflect the state specified by
-// the user.
-//
-// For more details, check Reconcile and its Result here:
-// - https://pkg.go.dev/sigs.k8s.io/controller-runtime@v0.7.0/pkg/reconcile
+// Reconcile handles a reconciliation request for a Pod.
+// If the Pod has the addPodNameLabelAnnotation annotation, then Reconcile
+// will make sure the podNameLabel label is present with the correct value.
+// If the annotation is absent, then Reconcile will make sure the label is too.
 func (r *PodReconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctrl.Result, error) {
-	_ = r.Log.WithValues("pod", req.NamespacedName)
+	log := r.Log.WithValues("pod", req.NamespacedName)
 
-	// your logic here
+	/*
+		Step 0: Fetch the Pod from the Kubernetes API.
+	*/
+
+	var pod corev1.Pod
+	if err := r.Get(ctx, req.NamespacedName, &pod); err != nil {
+		if apierrors.IsNotFound(err) {
+			// we'll ignore not-found errors, since they can't be fixed by an immediate
+			// requeue (we'll need to wait for a new notification), and we can get them
+			// on deleted requests.
+			return ctrl.Result{}, nil
+		}
+		log.Error(err, "unable to fetch Pod")
+		return ctrl.Result{}, err
+	}
 
 	return ctrl.Result{}, nil
 }
