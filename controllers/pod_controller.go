@@ -35,6 +35,11 @@ type PodReconciler struct {
 
 // +kubebuilder:rbac:groups=core,resources=pods,verbs=get;list;watch;update;patch
 
+const (
+	addPodNameLabelAnnotation = "padok.fr/add-pod-name-label"
+	podNameLabel              = "padok.fr/pod-name"
+)
+
 // Reconcile is part of the main kubernetes reconciliation loop which aims to
 // move the current state of the cluster closer to the desired state.
 // TODO(user): Modify the Reconcile function to compare the state specified by
