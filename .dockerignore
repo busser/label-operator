@@ -1,5 +1,8 @@
 # More info: https://docs.docker.com/engine/reference/builder/#dockerignore-file
 # Ignore all files which are not go type
-!**/*.go
-!**/*.mod
-!**/*.sum
+*
+!go.mod
+!go.sum
+!main.go
+!api/**/*.go
+!controllers/**/*.go
